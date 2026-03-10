@@ -74,7 +74,6 @@ class FirewallRule extends Model {
             allow_interface_groups: true,
             allow_ipsec_interface: true,
             allow_openvpn_interface: true,
-            allow_custom: ['any'],
             many: true,
             help_text: 'The interface where packets must originate to match this rule.',
         );
@@ -273,7 +272,6 @@ class FirewallRule extends Model {
             help_text: 'The internal tracking ID for this firewall rule.',
         );
         $this->associated_rule_id = new StringField(
-            unique: true,
             default: null,
             allow_null: true,
             editable: false,

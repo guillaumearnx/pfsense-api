@@ -3,10 +3,8 @@
 namespace RESTAPI\Tests;
 
 use RESTAPI\Core\TestCase;
-use RESTAPI\Models\FirewallAlias;
 use RESTAPI\Models\FirewallRule;
 use RESTAPI\Models\PortForward;
-use RESTAPI\Responses\ValidationError;
 
 class APIModelsPortForwardTestCase extends TestCase {
     /**
@@ -97,8 +95,11 @@ class APIModelsPortForwardTestCase extends TestCase {
 
         # Ensure the pure NAT reflection rule is present
         $rules_debug = file_get_contents('/tmp/rules.debug');
-        $purenat_rule = 'inet proto tcp from any to 127.3.2.1 port 8443 -> 127.1.2.3';
-        $this->assert_str_contains($rules_debug, $purenat_rule);
+        $purenat_rule = "rdr on {$this->env['PFREST_LAN_IF']} inet proto tcp from any to 127.3.2.1 port 8443 -> 127.1.2.3";
+        $purenat_rule_ovpn = "rdr on { {$this->env['PFREST_LAN_IF']} openvpn } inet proto tcp from any to 127.3.2.1 port 8443 -> 127.1.2.3";
+        $this->assert_is_true(
+            str_contains($rules_debug, $purenat_rule) or str_contains($rules_debug, $purenat_rule_ovpn),
+        );
 
         # Update the NAT reflection mode NAT + proxy (enable)
         $port_forward->natreflection->value = 'enable';
@@ -106,8 +107,14 @@ class APIModelsPortForwardTestCase extends TestCase {
 
         # Ensure the pure NAT reflection rule is no longer present and the NAT proxy rule is present
         $rules_debug = file_get_contents('/tmp/rules.debug');
-        $natproxy_rule = 'proto tcp from any to 127.3.2.1 port 8443 tag PFREFLECT -> 127.0.0.1 port 19000';
-        $this->assert_str_contains($rules_debug, $natproxy_rule);
+        $natproxy_rule = "rdr on {$this->env['PFREST_LAN_IF']} proto tcp from any to 127.3.2.1 port 8443 tag PFREFLECT -> 127.0.0.1 port 19000";
+        $natproxy_rule_ovpn = "rdr on { {$this->env['PFREST_LAN_IF']} openvpn } proto tcp from any to 127.3.2.1 port 8443 tag PFREFLECT -> 127.0.0.1 port 19000";
+        $this->assert_is_false(
+            str_contains($rules_debug, $purenat_rule) or str_contains($rules_debug, $purenat_rule_ovpn),
+        );
+        $this->assert_is_true(
+            str_contains($rules_debug, $natproxy_rule) or str_contains($rules_debug, $natproxy_rule_ovpn),
+        );
 
         # Delete the port forward and ensure the previous reflection rule is no longer present
         $port_forward->delete(apply: true);
@@ -228,59 +235,5 @@ class APIModelsPortForwardTestCase extends TestCase {
         $port_forward->delete();
         $rule_q = FirewallRule::query(associated_rule_id: $port_forward->associated_rule_id->value);
         $this->assert_is_false($rule_q->exists());
-    }
-
-    /**
-     * Ensures the target field accepts IP addresses, aliases and interface IPs
-     */
-    public function test_target_validation(): void {
-        # Create an alias to test with
-        $alias = new FirewallAlias(name: 'testalias', type: 'host');
-        $alias->create();
-
-        # Set values we expect to be allowed vs disallowed
-        $allowed_values = ['1.2.3.4', 'wan:ip', 'testalias'];
-        $disallowed_values = ['example.com', 'wan', 'self', 'l2tp', '1.2.3.4/24'];
-
-        # Check each allowed value and ensure it does not throw an exception during validation
-        foreach ($allowed_values as $value) {
-            $this->assert_does_not_throw(
-                callable: function () use ($value) {
-                    $port_forward = new PortForward(
-                        data: [
-                            'interface' => 'wan',
-                            'protocol' => 'tcp',
-                            'source' => 'any',
-                            'destination' => 'wan:ip',
-                            'destination_port' => '8443',
-                            'target' => $value,
-                            'local_port' => '4443',
-                        ],
-                    );
-                    $port_forward->validate();
-                },
-            );
-        }
-
-        # Check each disallowed value and ensure it throws an exception during validation
-        foreach ($disallowed_values as $value) {
-            $this->assert_throws(
-                exceptions: ['RESTAPI\Responses\ValidationError'],
-                callable: function () use ($value) {
-                    $port_forward = new PortForward(
-                        data: [
-                            'interface' => 'wan',
-                            'protocol' => 'tcp',
-                            'source' => 'any',
-                            'destination' => 'wan:ip',
-                            'destination_port' => '8443',
-                            'target' => $value,
-                            'local_port' => '4443',
-                        ],
-                    );
-                    $port_forward->validate();
-                },
-            );
-        }
     }
 }

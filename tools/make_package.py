@@ -23,9 +23,10 @@ import subprocess
 import sys
 import jinja2
 
+
 # Constants
-REPO_OWNER = "pfrest"
-REPO_NAME = "pfSense-pkg-RESTAPI"
+REPO_OWNER = "jaredhendrickson13"
+REPO_NAME = "pfsense-api"
 PKG_NAME = "pfSense-pkg-RESTAPI"
 
 

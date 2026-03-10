@@ -9,7 +9,6 @@ use RESTAPI\Fields\IntegerField;
 use RESTAPI\Fields\StringField;
 use RESTAPI\Responses\ForbiddenError;
 use RESTAPI\Responses\NotFoundError;
-use RESTAPI\Responses\UnprocessableContentError;
 use RESTAPI\Responses\ValidationError;
 use RESTAPI\Validators\RegexValidator;
 
@@ -49,10 +48,9 @@ class UserGroup extends Model {
         );
         $this->scope = new StringField(
             default: 'local',
-            choices: ['local', 'remote', 'system'],
+            choices: ['local', 'remote'],
             help_text: 'The scope of this user group. Use `local` for user groups that only apply to this system. use ' .
-                '`remote` for groups that also apply to remote authentication servers. Please note the `system` scope ' .
-                'is reserved for built-in, system-defined user groups and cannot be assigned manually.',
+                '`remote` for groups that also apply to remote authentication servers.',
         );
         $this->member = new ForeignModelField(
             model_name: 'User',
@@ -61,7 +59,6 @@ class UserGroup extends Model {
             default: [],
             allow_empty: true,
             many: true,
-            many_maximum: 2048,
             delimiter: null,
             help_text: 'The local user names to assign to this user group.',
         );
@@ -96,26 +93,6 @@ class UserGroup extends Model {
         }
 
         return $name;
-    }
-
-    /**
-     * Adds additional validation to the `scope` field.
-     * @param string $scope The incoming value to be validated.
-     * @return string The validated value to be assigned.
-     * @throws ValidationError When `scope` is set to `system` and this is a newly created object or the existing
-     * `scope` is not already `system`.
-     */
-    public function validate_scope(string $scope): string {
-        $existing_scope = $this->initial_object->scope->value ?? null;
-
-        if ($scope === 'system' and $scope !== $existing_scope) {
-            throw new UnprocessableContentError(
-                message: 'Field `scope` cannot be set to `system` as it is reserved for system-defined user groups only.',
-                response_id: 'USER_GROUP_SCOPE_CANNOT_BE_SET_TO_SYSTEM',
-            );
-        }
-
-        return $scope;
     }
 
     /**

@@ -56,19 +56,11 @@ class SSH extends Model {
     public function apply() {
         # Stop the sshd service
         killbyname('sshd');
-        $this->log(
-            level: LOG_ERR,
-            message: 'secure shell configuration has changed. Stopping sshd.',
-            logfile: 'system',
-        );
+        $this->log_error('secure shell configuration has changed. Stopping sshd.');
 
         # If sshd is still enabled, restart the sshd service using the new config
         if (config_path_enabled('system/ssh', 'enable')) {
-            $this->log(
-                level: LOG_ERR,
-                message: 'secure shell configuration has changed. Restarting sshd.',
-                logfile: 'system',
-            );
+            $this->log_error('secure shell configuration has changed. Restarting sshd.');
             send_event('service restart sshd');
         }
     }

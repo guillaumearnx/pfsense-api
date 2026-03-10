@@ -31,7 +31,6 @@ class RESTAPISettings extends Model {
     public BooleanField $keep_backup;
     public BooleanField $login_protection;
     public BooleanField $log_successful_auth;
-    public StringField $log_level;
     public BooleanField $allow_pre_releases;
     public BooleanField $hateoas;
     public BooleanField $expose_sensitive_fields;
@@ -93,22 +92,6 @@ class RESTAPISettings extends Model {
             help_text: "Enables or disables logging of API authentication attempts that are successful. By default, only
             failed API authentication attempts are logged to prevent flooding the authentication logs. This field is
             only applicable when the API `login_protection` setting is enabled.",
-        );
-        $this->log_level = new StringField(
-            default: 'LOG_WARNING',
-            choices: [
-                'LOG_DEBUG' => 'Debug',
-                'LOG_INFO' => 'Info',
-                'LOG_NOTICE' => 'Notice',
-                'LOG_WARNING' => 'Warning',
-                'LOG_ERR' => 'Error',
-                'LOG_CRIT' => 'Critical',
-                'LOG_ALERT' => 'Alert',
-                'LOG_EMERG' => 'Emergency',
-            ],
-            verbose_name: 'log level',
-            help_text: 'Sets the log level for API logging. The log level determines the minimum severity of messages 
-            that should be logged.',
         );
         $this->allow_pre_releases = new BooleanField(
             default: false,
@@ -252,7 +235,7 @@ class RESTAPISettings extends Model {
 
         # Format choices so they include the class's verbose name as the choice's verbose name
         foreach (get_classes_from_namespace(namespace: '\\RESTAPI\\Models\\') as $model_class) {
-            $model = new $model_class(skip_init: true);
+            $model = new $model_class();
             foreach ($model->get_fields() as $field) {
                 if ($model->$field->sensitive) {
                     $choices[$model->get_class_shortname() . ':' . $field] =
@@ -311,7 +294,7 @@ class RESTAPISettings extends Model {
             return API_SETTINGS_RESTORE_NO_CHANGE;
         }
 
-        Model::set_config("installedpackages/package/$current_api_id/conf", $backup_api_conf);
+        config_set_path("installedpackages/package/$current_api_id/conf", $backup_api_conf);
         write_config('Synchronized persistent API configuration');
         return API_SETTINGS_RESTORE_SUCCESS;
     }

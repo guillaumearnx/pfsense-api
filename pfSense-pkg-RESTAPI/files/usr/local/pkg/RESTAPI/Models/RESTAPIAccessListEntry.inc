@@ -59,8 +59,7 @@ class RESTAPIAccessListEntry extends Model {
             allow_empty: true,
             many: true,
             many_minimum: 0,
-            help_text: 'The users that this entry applies to. Only users in this list will be affected by this ' .
-                'entry. Leave empty if this entry should apply to all users.',
+            help_text: 'The users that this entry applies to. Only users in this list will be affected by this entry.',
         );
         $this->sched = new ForeignModelField(
             model_name: 'FirewallSchedule',
@@ -137,8 +136,7 @@ class RESTAPIAccessListEntry extends Model {
 
         # If the assigned schedule no longer exists, log the event and deny access
         if (!$this->sched->get_related_model()) {
-            $this->log(
-                level: LOG_ERR,
+            $this->log_error(
                 message: "The schedule '{$this->sched->value}' assigned to REST API access list entry " .
                     "'$this->id' no longer exists.",
             );

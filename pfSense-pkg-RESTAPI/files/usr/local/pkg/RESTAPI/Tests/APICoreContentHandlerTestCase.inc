@@ -136,17 +136,7 @@ class APICoreContentHandlerTestCase extends TestCase {
                                 'data' => [
                                     'type' => 'array',
                                     'items' => [
-                                        'allOf' => [
-                                            [
-                                                'type' => 'object',
-                                                'properties' => [
-                                                    'id' => ['type' => $endpoint->model->id_type],
-                                                ],
-                                            ],
-                                            [
-                                                '$ref' => "#/components/schemas/{$endpoint->model->get_class_shortname()}",
-                                            ],
-                                        ],
+                                        '$ref' => "#/components/schemas/{$endpoint->model->get_class_shortname()}",
                                     ],
                                 ],
                             ],
@@ -175,17 +165,7 @@ class APICoreContentHandlerTestCase extends TestCase {
                         [
                             'type' => 'object',
                             'properties' => [
-                                'data' => [
-                                    'allOf' => [
-                                        [
-                                            'type' => 'object',
-                                            'properties' => [
-                                                'id' => ['type' => $endpoint->model->id_type],
-                                            ],
-                                        ],
-                                        ['$ref' => "#/components/schemas/{$endpoint->model->get_class_shortname()}"],
-                                    ],
-                                ],
+                                'data' => ['$ref' => "#/components/schemas/{$endpoint->model->get_class_shortname()}"],
                             ],
                         ],
                     ],

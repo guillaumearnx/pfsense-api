@@ -33,7 +33,6 @@ class SystemRESTAPISettingsForm extends Form {
                 'jwt_exp',
                 'login_protection',
                 'log_successful_auth',
-                'log_level',
                 'expose_sensitive_fields',
                 'override_sensitive_fields',
             ],
@@ -53,15 +52,15 @@ class SystemRESTAPISettingsForm extends Form {
     public array $buttons = [
         'rotate_server_key' => [
             'title' => 'Rotate Server Key',
-            'icon' => 'fa-solid fa-turn-up',
-            'classes' => ['btn-success'],
+            'icon' => 'fa-repeat',
+            'classes' => ['btn-success', 'btn-sm'],
             'on_click' => "return confirm(\"Rotating the server key will void any existing JWTs. Proceed?\");",
             'callable' => 'rotate_server_key',
         ],
         'report_an_issue' => [
             'title' => 'Report an Issue',
-            'icon' => 'fa-solid fa-question-circle',
-            'link' => 'https://github.com/pfrest/pfSense-pkg-RESTAPI/issues/new/choose',
+            'icon' => 'fa-question-circle',
+            'link' => 'https://github.com/jaredhendrickson13/pfsense-api/issues/new/choose',
             'classes' => ['btn-info'],
         ],
     ];

@@ -49,11 +49,11 @@ class OpenAPISchema extends Schema {
                 'version' => $restapi_version->current_version->value,
                 'contact' => [
                     'name' => 'GitHub',
-                    'url' => 'https://github.com/pfrest/pfSense-pkg-RESTAPI',
+                    'url' => 'https://github.com/jaredhendrickson13/pfsense-api',
                 ],
                 'license' => [
                     'name' => 'Apache 2.0',
-                    'url' => 'https://raw.githubusercontent.com/pfrest/pfSense-pkg-RESTAPI/master/LICENSE',
+                    'url' => 'https://raw.githubusercontent.com/jaredhendrickson13/pfsense-api/master/LICENSE',
                 ],
                 'description' =>
                     '### Getting Started' .

@@ -79,8 +79,7 @@ class CertificateRenew extends Model {
      */
     public function validate_certref(string $certref): string {
         # Ensure the Certificate is capable of being renewed.
-        $cert = lookup_cert($certref);
-        if (!is_cert_locally_renewable($cert['item'])) {
+        if (!is_cert_locally_renewable(lookup_cert($certref))) {
             throw new NotAcceptableError(
                 message: "Certificate with refid `$certref` is not capable of being renewed.",
                 response_id: 'CERTIFICATE_RENEW_UNAVAILABLE',
@@ -96,10 +95,7 @@ class CertificateRenew extends Model {
     public function _create(): void {
         # Extract details from the Certificate to renew
         $cert_config = &lookup_cert($this->certref->value);
-        $this->oldserial->value = cert_get_serial($cert_config['item']['crt']);
-
-        # The pfSense cert_renew() function expects a 'path' key with the config path
-        $cert_config['path'] = "cert/{$cert_config['idx']}";
+        $this->oldserial->value = cert_get_serial($cert_config['crt']);
 
         # Renew the cert using pfSense's built in cert_renew function
         $renewed = cert_renew(
@@ -118,9 +114,9 @@ class CertificateRenew extends Model {
         }
 
         # Otherwise, continue with the renewal
-        $this->newserial->value = cert_get_serial($cert_config['item']['crt']);
-        $msg = "Renewed certificate {$cert_config['item']['descr']} ({$cert_config['item']['refid']}) - Serial {$this->oldserial->value} -> {$this->newserial->value}";
-        $this->log(level: LOG_ERR, message: $msg, logfile: 'system');
+        $this->newserial->value = cert_get_serial($cert_config['crt']);
+        $msg = "Renewed certificate {$cert_config['descr']} ({$cert_config['refid']}) - Serial {$this->oldserial->value} -> {$this->newserial->value}";
+        $this->log_error($msg);
         $this->write_config($msg);
     }
 

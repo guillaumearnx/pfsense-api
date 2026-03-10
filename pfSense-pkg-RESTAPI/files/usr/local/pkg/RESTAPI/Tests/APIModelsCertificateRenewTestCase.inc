@@ -86,11 +86,12 @@ class APIModelsCertificateRenewTestCase extends TestCase {
     }
 
     /**
-     * Ensure when we renew the Certificate while reusing the key and serial, both the serial and
+     * Ensure when we renew the Certificate while reusing the key and serial, both the certificate and
      * the key remain the same.
      */
     public function test_renew_certificate_reuse(): void {
         # Before we renew, obtain the existing CA cert
+        $old_cert = $this->cert->crt->value;
         $old_key = $this->cert->prv->value;
 
         # Renew the Certificate
@@ -106,7 +107,8 @@ class APIModelsCertificateRenewTestCase extends TestCase {
         # Refresh our CA object
         $this->cert = Certificate::query(refid: $this->cert->refid->value)->first();
 
-        # Ensure the key and serial are the same
+        # Ensure the certificate, key and serial are the same
+        $this->assert_equals($old_cert, $this->cert->crt->value);
         $this->assert_equals($old_key, $this->cert->prv->value);
         $this->assert_equals($renew->oldserial->value, $renew->newserial->value);
     }

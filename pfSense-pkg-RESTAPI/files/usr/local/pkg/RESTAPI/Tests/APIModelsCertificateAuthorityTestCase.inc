@@ -111,17 +111,23 @@ R02Pul8ulWQ8Kl3Q3pou8As7W1mMzA2DxQ==
         );
         $ca->create();
 
-        # Ensure the cert is in the trust store directory
-        $truststore_dir_ls = glob('/usr/local/etc/ssl/certs/*.crt');
-        $this->assert_is_not_empty($truststore_dir_ls, message: 'Trust store directory should have one trusted CA!');
+        # Wait a few seconds for the trust store to be rebuilt
+        sleep(3);
+
+        # Ensure the certificate is found in the trust store
+        $certctl_list = new Command('certctl list');
+        $this->assert_str_contains($certctl_list->output, 'example.com');
 
         # Disable `trust`
         $ca->trust->value = false;
         $ca->update();
 
+        # Wait a few seconds for the trust store to be rebuilt
+        sleep(3);
+
         # Ensure the certificate is not found in the trust store
-        $truststore_dir_ls = glob('/usr/local/etc/ssl/certs/*.crt');
-        $this->assert_is_empty($truststore_dir_ls, message: 'Trust store directory should have no trusted CAs!');
+        $certctl_list = new Command('certctl list');
+        $this->assert_str_does_not_contain($certctl_list->output, 'example.com');
 
         # Delete the CA
         $ca->delete();

@@ -87,7 +87,7 @@ class UnixTimeField extends IntegerField {
         int $many_minimum = 0,
         int $many_maximum = 128,
         int $minimum = 0,
-        int $maximum = PHP_INT_MAX,
+        int $maximum = 99999999999999,
         public bool $auto_add_now = true,
         public bool $auto_update_now = false,
         ?string $delimiter = ',',

@@ -82,7 +82,7 @@ class FloatField extends RESTAPI\Core\Field {
         int $many_minimum = 0,
         int $many_maximum = 128,
         public int $minimum = 0,
-        public int $maximum = PHP_INT_MAX,
+        public int $maximum = 99999999999999,
         string|null $delimiter = ',',
         string $verbose_name = '',
         string $verbose_name_plural = '',
@@ -144,8 +144,8 @@ class FloatField extends RESTAPI\Core\Field {
 
         # Otherwise, the internal value cannot be represented by this Field. Throw an error.
         throw new RESTAPI\Responses\ServerError(
-            message: "Cannot parse FloatField '$this->name' from internal because its internal value is not " .
-                'a numeric value. Consider changing this field to a StringField.',
+            message: "Cannot parse FloatField '$this->name' from internal because its internal value is not
+                    a numeric value. Consider changing this field to a StringField.",
             response_id: 'FLOAT_FIELD_WITH_NON_FLOAT_INTERNAL_VALUE',
         );
     }

@@ -68,56 +68,30 @@ class TestCase {
 
                 # Set the current method undergoing testing
                 $this->method = $method;
-                $ref_method = new ReflectionMethod($this, $method);
 
                 # Gather the description for this test method from its doc comment
-                $this->method_docstring = $ref_method->getDocComment();
+                $this->method_docstring = (new ReflectionMethod($this, $method))->getDocComment();
                 $this->method_docstring = str_replace([PHP_EOL, '/**', '*/', '*', '  '], '', $this->method_docstring);
 
-                # Get the retry settings for this method
-                $retry_settings = $this->get_method_retry_settings($ref_method);
-
-                # Always attempt once, then add retries if configured
-                for ($attempt = 0; $attempt <= $retry_settings->retries; $attempt++) {
-                    try {
-                        # Try to run the test
-                        $this->$method();
-                        break;
-                    } catch (Error | Exception $e) {
-                        # Tear down any resources created by this test before retrying or exiting
-                        $this->restore_config($original_config);
-                        $this->teardown();
-
-                        # If we have retries left, wait the configured delay and try again
-                        if ($attempt < $retry_settings->retries) {
-                            sleep($retry_settings->delay);
-                            continue;
-                        }
-
-                        # If we made it here, we have no retries left. Throw the exception to the caller.
-                        throw $e;
-                    }
+                # Try to run the test. On failure, restore the original config and throw the exception
+                try {
+                    $this->$method();
+                } catch (Error | Exception $e) {
+                    # Restore the original configuration, teardown the TestCase and throw the encountered error
+                    $config = $original_config;
+                    write_config("Restored config after API test '$method'");
+                    $this->teardown();
+                    throw $e;
                 }
 
                 # Restore the config as it was when the test began.
-                $this->restore_config($original_config);
+                $config = $original_config;
+                write_config("Restored config after API test '$method'");
             }
         }
 
         # Teardown the test case now that all tests are completed
         $this->teardown();
-    }
-
-    /**
-     * Restores the configuration to its original state and clears the Model object cache.
-     *
-     * @param array $original_config The original configuration to restore.
-     */
-    protected function restore_config(array $original_config): void {
-        global $config;
-        $config = $original_config;
-        Model::clear_model_cache();
-        write_config("Restored config after API test '{$this->method}'");
     }
 
     /**
@@ -162,23 +136,6 @@ class TestCase {
      * that may have been created during tests.
      */
     public function teardown(): void {}
-
-    /**
-     * @param ReflectionMethod $method The method to check for a TestCaseRetry attribute.
-     * @return TestCaseRetry The TestCaseRetry attribute found on the method, or a default TestCaseRetry object
-     */
-    protected function get_method_retry_settings(ReflectionMethod $method): TestCaseRetry {
-        # Use default retry settings if no attribute is found
-        $retries = new TestCaseRetry();
-
-        # If this method has a TestCaseRetry attribute, use it
-        $attributes = $method->getAttributes(TestCaseRetry::class);
-        if (count($attributes) > 0) {
-            $retries = $attributes[0]->newInstance();
-        }
-
-        return $retries;
-    }
 
     /**
      * Obtains the environment variable with a given name.
